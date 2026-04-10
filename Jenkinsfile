@@ -25,12 +25,12 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-            withSonarQubeEnv('sonarqube-server') {
-            sh '''
-            mvn sonar:sonar \
-            -Dsonar.projectKey=datastore \
-            -Dsonar.host.url=http://sonarqube:9000 \
-            -Dsonar.login=$SONAR_TOKEN
+                withSonarQubeEnv('sonarqube-server') {
+                sh '''
+                mvn sonar:sonar \
+                -Dsonar.projectKey=datastore \
+                -Dsonar.host.url=http://sonarqube:9000 \
+                -Dsonar.login=$SONAR_TOKEN
             '''
         }
     }
