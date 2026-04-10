@@ -25,16 +25,16 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube-server') {
-                    sh '''
-                    echo "-------- Running SonarQube Analysis --------"
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=datastore \
-                    -Dsonar.login=$SONAR_TOKEN
-                    '''
-                }
-            }
+            withSonarQubeEnv('sonarqube-server') {
+            sh '''
+            mvn sonar:sonar \
+            -Dsonar.projectKey=datastore \
+            -Dsonar.host.url=http://sonarqube:9000 \
+            -Dsonar.login=$SONAR_TOKEN
+            '''
         }
+    }
+}
 
         stage('Quality Gate') {
             steps {
