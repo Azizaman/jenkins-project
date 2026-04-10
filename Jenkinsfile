@@ -29,8 +29,8 @@ pipeline {
                 sh '''
                 mvn sonar:sonar \
                 -Dsonar.projectKey=datastore \
-                -Dsonar.host.url=http://sonarqube:9000 \
-                -Dsonar.login=$SONAR_TOKEN
+                -Dsonar.login=$SONAR_TOKEN \
+                -Dsonar.host.url=http://sonarqube:9000
             '''
         }
     }
