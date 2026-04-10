@@ -3,14 +3,14 @@ pipeline {
 
     environment {
         App_Version = "v1.0.${BUILD_NUMBER}"
-        SONARQUBE_SERVER = "sonarqube-server"
+        SONAR_TOKEN = credentials('sonar-token')   // ✅ Sonar token
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Azizaman/datastore-project-devops.git'
+                git branch: 'main', url: 'https://github.com/Azizaman/jenkins-project.git'
             }
         }
 
@@ -30,7 +30,6 @@ pipeline {
                     echo "-------- Running SonarQube Analysis --------"
                     mvn sonar:sonar \
                     -Dsonar.projectKey=datastore \
-                    -Dsonar.host.url=http://<EC2-IP>:9000 \
                     -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
@@ -47,31 +46,46 @@ pipeline {
 
         stage('Maven Test') {
             steps {
-                sh 'mvn test'
+                sh '''
+                echo "-------- Running Tests --------"
+                mvn test
+                '''
             }
         }
 
         stage('Upload Artifact to S3') {
             steps {
-                sh 'aws s3 cp target/*.jar s3://datastore-artefact-store-apps-jenkins/'
+                sh '''
+                echo "-------- Uploading Artifact --------"
+                aws s3 cp target/*.jar s3://datastore-artefact-store-apps-jenkins/
+                '''
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t datastore:${App_Version} .'
+                sh '''
+                echo "-------- Building Docker Image --------"
+                docker build -t datastore:${App_Version} .
+                '''
             }
         }
 
         stage('Scan Docker Image') {
             steps {
-                sh 'trivy image datastore:${App_Version}'
+                sh '''
+                echo "-------- Scanning Docker Image --------"
+                trivy image datastore:${App_Version}
+                '''
             }
         }
 
         stage('Tag Docker Image') {
             steps {
-                sh 'docker tag datastore:${App_Version} 8072388539/datastore:${App_Version}'
+                sh '''
+                echo "-------- Tagging Image --------"
+                docker tag datastore:${App_Version} 8072388539/datastore:${App_Version}
+                '''
             }
         }
 
@@ -83,7 +97,10 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
+                    echo "-------- Docker Login --------"
                     docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+                    echo "-------- Pushing Image --------"
                     docker push 8072388539/datastore:${App_Version}
                     '''
                 }
@@ -92,7 +109,10 @@ pipeline {
 
         stage('Cleanup') {
             steps {
-                sh 'docker image prune -a -f'
+                sh '''
+                echo "-------- Cleaning Docker --------"
+                docker image prune -a -f
+                '''
             }
         }
 
